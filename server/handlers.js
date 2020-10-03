@@ -39,7 +39,7 @@ const getSeats = async (req, res) => {
 let lastBookingAttemptSucceeded = false;
 
 const bookSeat = async (req, res) => {
-  const { seatId, creditCard, expiration } = req.body;
+  const { seatId, creditCard, expiration, fullName, email } = req.body;
   console.log("seatId", seatId);
   const client = await MongoClient(MONGO_URI, options);
 
@@ -69,7 +69,14 @@ const bookSeat = async (req, res) => {
   }
 
   lastBookingAttemptSucceeded = !lastBookingAttemptSucceeded;
-  const newValue = { $set: { isBooked: true } };
+
+  if (fullName === "" && email === "") {
+    return res.status(400).json({
+      status: 400,
+      message: "please provide your name and email address",
+    });
+  }
+  const newValue = { $set: { isBooked: true, email, fullName } };
   const r = await db.collection("Seats").updateOne({ _id: seatId }, newValue);
 
   assert.equal(1, r.matchedCount);
